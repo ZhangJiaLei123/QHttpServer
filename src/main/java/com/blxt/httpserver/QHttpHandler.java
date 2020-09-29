@@ -1,6 +1,7 @@
 package com.blxt.httpserver;
 
 import com.alibaba.fastjson.JSONObject;
+import com.blxt.httpserver.util.ControllerMap;
 import com.blxt.utils.Converter;
 import com.blxt.utils.check.CheckUtils;
 import com.sun.net.httpserver.HttpExchange;
@@ -13,6 +14,7 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.net.URI;
 import java.util.Map;
+
 
 /**
  * http的路由分配
@@ -36,13 +38,13 @@ public class QHttpHandler implements HttpHandler {
         Object object = null;
         String creator = controllerMap.getCreator();
         try {
-            // 通过单例,实例化对象
-            if("getInstance".equals(creator)){
+            if(creator != null){
+                /* 通过指定方法,实例化对象 */
                 Method m2 = objClass.getDeclaredMethod(creator);
                 object =  m2.invoke(objClass);
             }
             else{
-                // 通过构造方法,实例化对象
+                /* 通过构造方法,实例化对象 */
                 Constructor constructor = objClass.getConstructor();
                 object = constructor.newInstance();
             }
@@ -57,7 +59,7 @@ public class QHttpHandler implements HttpHandler {
         JSONObject jsonObject = Converter.urlParam2Json(s1);
         Map<String, Object> map = Converter.toMap(jsonObject);
 
-        // 反射方法,并执行(带参)
+        /* 反射方法,并执行(带参) */
         String methodName = controllerMap.getMethodName();
         String response = "";
         try {
@@ -71,7 +73,7 @@ public class QHttpHandler implements HttpHandler {
             e.printStackTrace();
         }
 
-        // 结果返回
+        /* 结果返回 */
         httpExchange.sendResponseHeaders(200, response.length());
         OutputStream os = httpExchange.getResponseBody();
         os.write(response.getBytes());

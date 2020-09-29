@@ -1,4 +1,4 @@
-package com.blxt.httpserver;
+package com.blxt.httpserver.util;
 
 import java.util.Arrays;
 
@@ -14,7 +14,7 @@ public class ControllerMap {
     /** 参数 */
     String[] params;
 
-    /** 构建方法名 */
+    /** 实例化方法名,如果null,就使用默认构造方法 */
     String creator;
 
     public ControllerMap(Class<?> controller, String methodName, String[] params, String instance) {

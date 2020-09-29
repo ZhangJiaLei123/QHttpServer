@@ -1,8 +1,7 @@
+package com.qhttpserver.test;
 
 import com.alibaba.fastjson.JSONObject;
-import com.blxt.httpserver.inter.GetMapping;
-import com.blxt.httpserver.inter.PostMapping;
-import com.blxt.httpserver.inter.RequestMapping;
+import com.blxt.httpserver.inter.*;
 
 import java.util.Map;
 
@@ -10,12 +9,14 @@ import java.util.Map;
  * @Author: Zhang.Jialei
  * @Date: 2020/9/24 11:40
  */
+@RestController
 @RequestMapping("hello")
-public class ControllerDefaultImp
+@InstanceMap("getInstance2")
+public class HelloController
 {
-    static ControllerDefaultImp Instance = new ControllerDefaultImp();
+    static HelloController Instance = new HelloController();
 
-    public static ControllerDefaultImp getInstance(){
+    public static HelloController getInstance2(){
         return Instance;
     }
 

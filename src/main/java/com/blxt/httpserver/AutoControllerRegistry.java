@@ -1,17 +1,26 @@
 package com.blxt.httpserver;
 
-import com.blxt.httpserver.inter.GetMapping;
-import com.blxt.httpserver.inter.PostMapping;
-import com.blxt.httpserver.inter.RequestMapping;
+import com.blxt.httpserver.inter.*;
+import com.blxt.httpserver.util.ControllerMap;
+import com.blxt.utils.check.CheckUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.lang.reflect.Method;
 import java.util.HashMap;
 import java.util.Map;
 
 /**
+ * 路由注册器
  * @Author: Zhang.Jialei
  * @Date: 2020/9/29 9:11
  */
 public class AutoControllerRegistry {
+    public static Logger logger =  LoggerFactory.getLogger(AutoControllerRegistry.class);
+
+    /** 单例方法名称 */
+    public final static String INSTANCE_METHOD_NAME = "getInstance";
+    public final static String separator = "/";
 
     static AutoControllerRegistry instance;
 
@@ -33,31 +42,40 @@ public class AutoControllerRegistry {
 
     public static void registry(Class<?> bean){
         String modelPath = "";
-        // 从类注解Configuration中获取值,判断是否是自定义的配置文件路径
+        // 从类注解RequestMapping中获取值,判断是否自定义模块根路径
         RequestMapping anno =  bean.getAnnotation(RequestMapping.class);
-
+        Controller anno2 = bean.getAnnotation(Controller.class);
         if(anno != null){
             modelPath = getPath(anno.value());
+        }else if(anno2 != null){
+            modelPath = getPath(anno2.value());
+        }
+
+        modelPath = appPath + modelPath;
+
+        // 判断是否是单例类
+        String creator = null;
+        InstanceMap instanceMap = bean.getAnnotation(InstanceMap.class);
+        if(instanceMap != null){
+            // 获取标注解的单例方法名称
+            String instanceMapValue = instanceMap.value().trim();
+            if(CheckUtils.isNotEmpty(instanceMap)){
+                creator = instanceMapValue;
+            }
+        }
+        try {
+            // 如果没有标记单例,就使用默认的单例
+            String srtTmp = creator == null ? INSTANCE_METHOD_NAME : creator;
+            bean.getMethod(srtTmp);
+            creator = srtTmp;
+        } catch (NoSuchMethodException e) {
+            creator = null;
         }
 
         //java反射机制获取所有方法名
         Method[] declaredMethods = bean.getDeclaredMethods();
-
-        // 判断是否是单例类
-        String creator = null;
-        try {
-            bean.getMethod("getInstance", bean);
-            creator = "getInstance";
-        } catch (NoSuchMethodException e) {
-            creator = bean.getName();
-        }
-
         //遍历循环方法并获取对应的注解名称
         for (Method declaredMethod : declaredMethods) {
-
-            if("getInstance".equals(declaredMethod.getName())){
-                creator = "getInstance";
-            }
 
             PostMapping methodAnno = declaredMethod.getAnnotation(PostMapping.class);
             GetMapping methodAnno2 = declaredMethod.getAnnotation(GetMapping.class);
@@ -75,9 +93,9 @@ public class AutoControllerRegistry {
 
             ControllerMap controllerMap = new ControllerMap(bean, declaredMethod.getName(), new String[]{}, creator);
             // 注册路由
-            urlMap.put(appPath + modelPath + path , controllerMap);
+            urlMap.put( modelPath + path , controllerMap);
             // 根据对象获取注解值
-            System.out.println("PostMapping:" + appPath +  modelPath + path + "," + controllerMap.toString());
+            logger.debug("Controller, URL:{}{}, class;{}",  modelPath , path , controllerMap.toString());
 
         }
     }
@@ -105,11 +123,11 @@ public class AutoControllerRegistry {
             path = "";
         }
 
-        if (!path.startsWith("/")) {
-            path = "/" + path;
+        if (!path.startsWith(separator)) {
+            path = separator + path;
         }
-        if (path.equals("/")) {
-            path = "";
+        if (separator.equals(path)) {
+            path = separator;
         }
         return path;
     }
