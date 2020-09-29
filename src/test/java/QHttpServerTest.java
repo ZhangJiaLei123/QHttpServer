@@ -1,4 +1,4 @@
-import com.blxt.httpserver.ControllerRegistry;
+import com.blxt.httpserver.AutoControllerRegistry;
 import com.blxt.httpserver.QHttpServer;
 
 import java.io.IOException;
@@ -11,19 +11,16 @@ public class QHttpServerTest {
 
     public static void main(String[] args) throws IOException {
 
-        QHttpServer.newInstance("/hello", 8089, 0);
+        String appPath = "/mqtt";
 
-//        QHttpHandler.addBind("/hello2/t1", new ControllerImp());
-//        QHttpHandler.addBindByRoot("/hello", "/t1", new ControllerImp().setRootPath());
-        // 添加 Controller 层
-        ControllerDefaultImp controllerImp = new ControllerDefaultImp();
-        controllerImp.setRootPath("hello");
-        controllerImp.addMethod("/test1", "function1");
-        controllerImp.addMethod("/test2", "function2");
+        // 服务端口初始化
+        QHttpServer.newInstance(appPath, 8089, 0);
 
-        // 注册路由
-        ControllerRegistry controllerRegistry = ControllerRegistry.getInstance();
-        controllerRegistry.addBinds(controllerImp);
+        // 路由器初始化
+        AutoControllerRegistry.init(appPath);
+
+        // 注册路由,半自动,支持自动实例化和单例
+        AutoControllerRegistry.registry(ControllerDefaultImp.class);
 
         // 启动服务
         QHttpServer.getInstance().start();
